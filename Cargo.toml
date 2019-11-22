@@ -1,0 +1,14 @@
+[package]
+name = "mystery-dialogue-parsing"
+version = "0.1.0"
+authors = ["Intrebute <ke.seas.feliz@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+nom = "5.0.0"
+indenty = { path = "../indenty" }
+as-slice = "0.2.0"
+
+[[bin]]
+name = "indenty"
+path = "src/main.rs"
