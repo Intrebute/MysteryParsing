@@ -1,12 +1,12 @@
-
-
-I want:
-  a thing
-  with more things
-    more inside
-less
-less
-more
-  haha
-
-  empty line before
+Say:
+    Hello hello!
+    Lovely day.
+Ask: Any idea where they went?
+    Maybe that way?
+        Say:
+            Nah, there's a cliff there.
+            They would have fallen.
+    Behind you!
+        [Speaker|Shock]
+        Say:
+            Oh no I've been tricked!

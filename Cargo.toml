@@ -10,5 +10,5 @@ indenty = { path = "../indenty" }
 as-slice = "0.2.0"
 
 [[bin]]
-name = "indenty"
+name = "mystery-dialogue-parsing"
 path = "src/main.rs"

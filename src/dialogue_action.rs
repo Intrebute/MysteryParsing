@@ -4,7 +4,7 @@ pub type DialogueMap<Msg, Stl, Tg> = HashMap<Tg, Vec<DialogueAction<Msg, Stl, Tg
 
 #[derive(PartialEq, Eq, Debug)]
 pub enum DialogueAction<Msg, Stl, Tg> {
-    Say(Vec<Msg>),
+    Say(Msg),
     Ask(Question<Msg, Stl, Tg>),
     Still(Stl),
     Tag(Tg),
@@ -120,6 +120,43 @@ pub mod parsing {
                 |(_, r): (&str, &str)| { HashTag(r.to_string()) })(s)
                 .map_err(|e: nom::Err<(&str, ErrorKind)>| format!("Text: \"{:?}\" does not start with '#'", e))?;
         Ok((rest, t))
+    }
+
+    pub fn parse_question<'f, 's>(
+        input: &'f Forest<&'s str>,
+    ) -> Result<(&'f Forest<&'s str>, Question<StringSay, CharPoseStringStill, HashTag>), String> {
+        let (head, rest) = take_one(input)?;
+        let (question, _): (&str, &str) = tag("Ask: ")(head.value).map_err(|e: nom::Err<(&str, ErrorKind)>| {
+            format!("\"{:?}\" is not \"Ask\"", e).to_string()
+        })?;
+        let question = StringSay(vec![question.to_string()]);
+        let answers = repeat_until_empty(parse_answer)(&head.children)?;
+        Ok((rest, Question { question, answers }))
+    }
+
+    pub fn parse_answer<'f, 's>(
+        input: &'f Forest<&'s str>,
+    ) -> Result<(&'f Forest<&'s str>, Answer<StringSay, CharPoseStringStill, HashTag>), String> {
+        let (head, rest) = take_one(input)?;
+        let answer = StringSay(vec![head.value.to_string()]);
+        let next_actions: Vec<DialogueAction<StringSay, CharPoseStringStill, HashTag>> = repeat_until_empty(parse_dialogue_action)(&head.children)?;
+        Ok((rest, Answer { option_text: answer, next_action: next_actions }))
+    }
+
+    pub fn parse_dialogue_action<'f, 's>(
+        input: &'f Forest<&'s str>,
+    ) -> Result<(&'f Forest<&'s str>, DialogueAction<StringSay, CharPoseStringStill, HashTag>), String> {
+        if let Ok((rest, say)) = parse_string_say(input) {
+            Ok((rest, DialogueAction::Say(say)))
+        } else if let Ok((rest, ask)) = parse_question(input) {
+            Ok((rest, DialogueAction::Ask(ask)))
+        } else if let Ok((rest, pose)) = parse_char_pose_string_still(input) {
+            Ok((rest, DialogueAction::Still(pose)))
+        } else if let Ok((rest, tag)) = parse_hash_tag(input) {
+            Ok((rest, DialogueAction::Tag(tag)))
+        } else {
+            Err(format!("\"{:?}\" is not a valid dialogue action", input))
+        }
     }
 
     pub fn node<I>(input: &RoseTree<I>) -> Result<&I, String> {
